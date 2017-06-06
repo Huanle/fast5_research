@@ -20,7 +20,7 @@ class BulkFast5Test(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        print '\n* Bulk Fast5'
+        pass
 
     # tests specific to this file
 
@@ -287,7 +287,7 @@ class BulkABFFast5Test(BulkFast5Test):
 
     @classmethod
     def setUpClass(self):
-        print '\n* Bulk ABF Fast5'
+        pass
 
     # tests to skip
     @unittest.skip("Skipping test_parse_experimental_metadata")

@@ -52,8 +52,7 @@ class Fast5API(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        print '* Fast5 API'
-
+        pass
 
     def test_000_basic_functions(self):
         # Just test an inherited member
@@ -176,7 +175,6 @@ class Fast5API(unittest.TestCase):
 
 
         # Metadata duration and start_time should be integers, not floats
-        print tmp_file
         with Fast5(tmp_file, 'r') as h:
             for key in ['duration', 'start_time']:
                 self.assertIsInstance(
