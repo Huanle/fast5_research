@@ -519,3 +519,64 @@ def file_has_fields(fname, fields=None):
         present_fields = set(fh.readline().rstrip('\n').split('\t'))
         has_fields = req_fields.issubset(present_fields)
     return has_fields
+
+def np_to_py(value):
+    """Convert numpy numeric types to their python equivalents."""
+    if isinstance(value, np.ndarray):
+        if value.dtype.kind == 'S':
+            return np.char.decode(value).tolist()
+        else:
+            return value.tolist()
+    elif type(value).__module__ == np.__name__:
+        conversion = np.asscalar(value)
+        if sys.version_info.major == 3 and isinstance(conversion, bytes):
+            conversion = conversion.decode()
+        return conversion
+    elif sys.version_info.major == 3 and isinstance(value, bytes):
+        return value.decode()
+    else:
+        return value
+
+
+def sanitize_write(data):
+    # We only really need to do interesting conversions for python3
+    if sys.version_info.major == 3:
+        if isinstance(data, str):
+            return data.encode()
+        elif isinstance(data, np.ndarray) and data.dtype.kind == np.dtype(np.unicode):
+            return data.astype('S')
+        elif isinstance(data, np.ndarray) and len(data.dtype) > 1:
+            dtypes = data.dtype.descr
+            for index, entry in enumerate(dtypes):
+                if entry[1].startswith('<U'):
+                    # numpy.astype can't handle empty string datafields for some
+                    # reason, so we'll explicitly state that.
+                    if len(entry[1]) <= 2 or (len(entry[1]) == 3 and
+                                              entry[1][2] == '0'):
+                        raise TypeError('Empty datafield {} cannot be converted'
+                                        ' by np.astype.'.format(entry[0]))
+                    dtypes[index] = (entry[0], '|S{}'.format(entry[1][2:]))
+            return data.astype(dtypes)
+    return data
+
+
+def sanitize_read(data):
+    # This is all python 3 conversions, where we need to check for byte strings
+    if sys.version_info.major == 3:
+        if isinstance(data, bytes):
+            return data.decode()
+        elif isinstance(data, np.ndarray) and data.dtype.kind == 'S':
+            return np.char.decode(data)
+        elif isinstance(data, np.ndarray) and len(data.dtype) > 1:
+            dtypes = data.dtype.descr
+            for index, entry in enumerate(dtypes):
+                if entry[1].startswith('|S'):
+                    # numpy.astype can't handle empty datafields for some
+                    # reason, so we'll explicitly state that.
+                    if len(entry[1]) <= 2 or (len(entry[1]) == 3 and
+                                              entry[1][2] == '0'):
+                        raise TypeError('Empty datafield {} cannot be converted'
+                                        ' by np.astype.'.format(entry[0]))
+                    dtypes[index] = (entry[0], '<U{}'.format(entry[1][2:]))
+            return data.astype(dtypes)
+    return data

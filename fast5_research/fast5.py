@@ -15,11 +15,13 @@ import progressbar
 from fast5_research.util import mad
 from fast5_research.util import docstring_parameter
 from fast5_research.util import readtsv
+from fast5_research.util import np_to_py, sanitise_read, sanitise_write
 
 from fast5_research.util import validate_event_table, validate_model_table, validate_scale_object
 from fast5_research.util import create_basecall_1d_output, create_mapping_output, mean_qscore, qstring_to_phred
 
 warnings.simplefilter("always", DeprecationWarning)
+
 
 class Fast5(h5py.File):
     """Class for grabbing data from single read fast5 files. Many attributes/
@@ -136,7 +138,7 @@ class Fast5(h5py.File):
         if location not in self:
             self.create_group(location)
         attrs = self[location].attrs
-        for k, v in data.iteritems():
+        for k, v in data.items():
             if convert is not None:
                 attrs[k] = convert(v)
             else:
